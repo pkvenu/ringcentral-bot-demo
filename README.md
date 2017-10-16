@@ -29,13 +29,14 @@ Step 3 - Fire up a Terminal window, navigate to the directory where you unzipped
 ```
 
 If every thing goes well you should see the follow screen.
-![][https://a.slack-edge.com/1877/img/api/articles/ngrok-running.png]
+![](/images/ngrok-running.png)
 
-Step 4 - Copy the ngrok https url and add the value to `REDIRECT_HOST` in .env file.
+Step 4 - Copy the ngrok https url and add the value to `REDIRECT_HOST` in .env file. The .env file will look like
+![](/images/envfile.png)
 
 Step 5 - In the redirect URI field, paste your ngrok forwarding address and add the /oauth endpoint at the end of the address that we opened up in our script. In this example it would look something like this:
 ```
-http://xxxxx.ngrok.io/oauth
+https://77c83694.ngrok.io/oauth
 ```
 
 Run the command in the terminal to launch the bot.
