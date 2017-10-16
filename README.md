@@ -67,8 +67,8 @@ $ npm start
 ```
 
 Step 8 - Go to the `Bot` tab of the recently created app in the developer portal. Click on the `Add to Glip` button. This will trigger the installation of the bot and will respond back with `authorization code` in url specified in `Step-5`.
-
-
+![](/images/bot_tab.png)
+![](/images/authorization.png)
 Step 9 - You can now exchange the authorization code for an bot token using the code below:
 ```
 //Authorization callback method.
@@ -114,7 +114,11 @@ app.get('/oauth', function (req, res) {
 ```
 You can now store the oAuth token in either a session variable, local storage or cookies for further use. Please note that the token provided is a persistant token.
 
-Step 10 - Login to glip.devtest.ringcentral.com with your credentials and search for the bot name as shown below:
+Step 10 - Login to glip.devtest.ringcentral.com with your credentials and search for the bot name. Click on the bot name and type in a message to start communicating with it.
+![](/images/glip_devtest.png)
+
+Step 11 - You should now see the notification messages in the console as show below:
+![](/images/console.png)
 
 
 ### Bug Reports & Feature Requests
