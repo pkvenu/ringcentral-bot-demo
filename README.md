@@ -53,12 +53,13 @@ If every thing goes well you should see the follow screen.
 Step 4 - Copy the ngrok https url and add the value to `REDIRECT_HOST` in .env file. The .env file will look like
 ![](/images/envfile.png)
 
-Step 5 - Go to https://developer.ringcentral.com and signin to your account. Create an app with platform type `Server/bot`. In the oAuth redirect URI field, paste your ngrok forwarding address and add the /oauth endpoint at the end of the address that we opened up in our script. In this example it would look something like this:
+Step 5 - Go to the settings section for the app created in developer protal and In the oAuth redirect URI field, paste your ngrok forwarding address and add the /oauth endpoint at the end of the address that we opened up in our script. In this example it would look something like this:
 ```
 https://77c83694.ngrok.io/oauth
 ```
 
 Step 6 - Go to the Dashboard of your app and copy the ClientID, ClientSecret from the app and update the .env file.
+![](/images/dashboard.png)
 
 Step 7 - Run the command in the terminal to launch the app.
 ```
@@ -66,6 +67,7 @@ $ npm start
 ```
 
 Step 8 - Go to the `Bot` tab of the recently created app in the developer portal. Click on the `Add to Glip` button. This will trigger the installation of the bot and will respond back with `authorization code` in url specified in `Step-5`.
+
 
 Step 9 - You can now exchange the authorization code for an bot token using the code below:
 ```
