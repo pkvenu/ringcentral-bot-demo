@@ -6,6 +6,25 @@ Using ngrok to developing locally with glip
 * ngrok: ngrok is a handy tool that lets you create a secure tunnel to local host. You can download the ngrok at https://ngrok.com/download
 * Create a new app with platform type -"Server/bot". (https://developer.ringcentral.com)
 
+### Create Glip bot app.
+
+* Sign in to [Developer Portal](https://developer.ringcentral.com) with your account login and password. If you do not have RingCentral account, please sign up.
+* Open My Apps tab and click 'Create App' button.
+  ![](/images/create_app.png)
+* Fill in the fields of the form 'General Settings - Create App' below:
+  ![](/images/general_setting_step1.png)
+* Fill in the fields of the form 'General Settings - AppType & Platform'. Make sure the platform type is `Server/Bot` as below:
+  ![](/images/general_setting_step2.png)
+* Fill in the fields of the form 'General Settings - OAuth Settings'. Add the following permissions `Glip`, `Webhook Subscription`, `Read Accounts`. You could leave the redirect url for now. We will come back once we install `ngrok`. Click `Create` once all information are inputted.
+  ![](/images/general_setting_step3.png)
+* If everything goes well you will see the following screen. We will use the `ClientID` and `ClientSecret` generated in this step to update the `.env` file during the installation phase.
+  ![](/images/dashboard.png)
+
+### Install ngrok
+* Go to https://ngrok.com/ and download the version that corresponds to your platform. In our case, we'll be downloading the Mac OS X 64-bit version.
+* You can extract ngrok into the folder of your preference and run ngrok from there.
+
+
 ## Installation
 
 Step 1 - Fire up a terminal window and change the path to the application directory. Enter the command below:
@@ -39,7 +58,7 @@ Step 5 - Go to https://developer.ringcentral.com and signin to your account. Cre
 https://77c83694.ngrok.io/oauth
 ```
 
-Step 6 - Copy the ClientID, ClientSecret from the app and update the .env file.
+Step 6 - Go to the Dashboard of your app and copy the ClientID, ClientSecret from the app and update the .env file.
 
 Step 7 - Run the command in the terminal to launch the app.
 ```
@@ -93,10 +112,13 @@ app.get('/oauth', function (req, res) {
 ```
 You can now store the oAuth token in either a session variable, local storage or cookies for further use. Please note that the token provided is a persistant token.
 
-#### Bug Reports & Feature Requests
+Step 10 - Login to glip.devtest.ringcentral.com with your credentials and search for the bot name as shown below:
+
+
+### Bug Reports & Feature Requests
 
 Something does not work as expected or perhaps you think this module needs a feature? Please [open an issue](https://github.com/pkvenu/developing-locally-with-Glip/issues/new) using GitHub's [issue tracker](https://github.com/pkvenu/developing-locally-with-Glip/issues). Please be as specific and straightforward as possible.
 
-#### Developing
+### Developing
 
 Pull Requests (PRs) are welcome. Make sure you follow the same basic stylistic conventions as the original code (i.e. ["JavaScript standard code style"](http://standardjs.com)). Your changes must be concise and focus on solving a single problem.

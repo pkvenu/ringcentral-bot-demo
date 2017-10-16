@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "A sample app to develop locally with glip using ngrok",
   "main": "app.js",
-  "script": {
+  "scripts": {
     "start": "node app.js"
   },
   "repository": {
