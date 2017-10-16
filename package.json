@@ -1,6 +1,23 @@
 {
   "name": "developing-locally-with-glip",
   "version": "0.0.1",
+  "description": "A sample app to develop locally with glip using ngrok",
+  "main": "app.js",
+  "script": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pkvenu/developing-locally-with-Glip.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pkvenu/developing-locally-with-Glip/issues"
+  },
+  "keywords": [
+    "salesforce",
+    "botkit",
+    "chatbot"
+  ],
   "dependencies": {
     "body-parser": "^1.18.2",
     "btoa": "^1.1.2",
