@@ -34,12 +34,12 @@ If every thing goes well you should see the follow screen.
 Step 4 - Copy the ngrok https url and add the value to `REDIRECT_HOST` in .env file. The .env file will look like
 ![](/images/envfile.png)
 
-Step 5 - Go to https://developer.ringcentral.com and signin to your account. Create an app with platform type `Server\bot`. In the oAuth redirect URI field, paste your ngrok forwarding address and add the /oauth endpoint at the end of the address that we opened up in our script. In this example it would look something like this:
+Step 5 - Go to https://developer.ringcentral.com and signin to your account. Create an app with platform type `Server/bot`. In the oAuth redirect URI field, paste your ngrok forwarding address and add the /oauth endpoint at the end of the address that we opened up in our script. In this example it would look something like this:
 ```
 https://77c83694.ngrok.io/oauth
 ```
 
-Step 6 - Copy the ClientID, ClientSecret from the app and update the .evn file.
+Step 6 - Copy the ClientID, ClientSecret from the app and update the .env file.
 
 Step 7 - Run the command in the terminal to launch the app.
 ```
