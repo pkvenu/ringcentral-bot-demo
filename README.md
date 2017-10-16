@@ -66,8 +66,9 @@ Step 7 - Run the command in the terminal to launch the app.
 $ npm start
 ```
 
-Step 8 - Go to the `Bot` tab of the recently created app in the developer portal. Click on the `Add to Glip` button. This will trigger the installation of the bot and will respond back with `authorization code` in url specified in `Step-5`.
+Step 8 - Go to the `Bot` tab of the recently created app in the developer portal. Click on the `Add to Glip` button.
 ![](/images/bot_tab.png)
+This will trigger the installation of the bot and will respond back with `authorization code` in url specified in `Step-5`.
 ![](/images/authorization.png)
 Step 9 - You can now exchange the authorization code for an bot token using the code below:
 ```
