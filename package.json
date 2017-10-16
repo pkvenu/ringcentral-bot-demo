@@ -14,9 +14,10 @@
     "url": "https://github.com/pkvenu/developing-locally-with-Glip/issues"
   },
   "keywords": [
-    "salesforce",
-    "botkit",
-    "chatbot"
+    "glip",
+    "onboarding",
+    "chatbot",
+    "bot"
   ],
   "dependencies": {
     "body-parser": "^1.18.2",
