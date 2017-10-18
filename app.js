@@ -2,27 +2,19 @@ require('dotenv').config();
 
 var express = require('express');
 var request = require('request');
-var btoa = require('btoa');
-var session = require('express-session');
+const RC = require('ringcentral');
 
-const crypto = require('crypto');
+
 const PORT= process.env.PORT;
 const REDIRECT_HOST= process.env.REDIRECT_HOST;
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const SHARED_SECRET= crypto.randomBytes(20).toString('hex');
 const RINGCENTRAL_ENV= process.env.RINGCENTRAL_ENV;
-var apiKey = encodeBasicAuthHeader(CLIENT_ID, CLIENT_SECRET);
+
+
 var app = express();
+var platform, subscription, rcsdk, subscriptionId, bot_token;
 
-var sess = {
-    secret: SHARED_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {}
-}
-
-app.use(session(sess));
 
 // Lets start our server
 app.listen(PORT, function () {
@@ -36,10 +28,14 @@ app.get('/', function(req, res) {
     res.send('Ngrok is working! Path Hit: ' + req.url);
 });
 
-function encodeBasicAuthHeader(clientId, clientSecret){
-    var apiKey = clientId + ':' + clientSecret;
-    return btoa(apiKey);
-}
+
+rcsdk = new RC({
+    server: RINGCENTRAL_ENV,
+    appKey: CLIENT_ID,
+    appSecret: CLIENT_SECRET
+});
+
+platform = rcsdk.platform();
 
 //Authorization callback method.
 app.get('/oauth', function (req, res) {
@@ -48,36 +44,17 @@ app.get('/oauth', function (req, res) {
         res.send({"Error": "Looks like we're not getting code."});
         console.log("Looks like we're not getting code.");
     }else {
-        request(
-            {
-                method: 'POST',
-                url: RINGCENTRAL_ENV + '/restapi/oauth/token',
-                headers:
-                    {
-                        'cache-control': 'no-cache',
-                        'content-type': 'application/x-www-form-urlencoded',
-                        accept: 'application/json',
-                        authorization: 'Basic '.concat(apiKey)
-                    },
-                form:
-                    {
-                        code: req.query.code,
-                        extension_id: req.query.extension_id,
-                        grant_type: 'authorization_code',
-                        redirect_uri: REDIRECT_HOST + '/oauth'
-                    }
-            }, function(error, response, body){
-                if(error){
-                    console.log(error);
-                } else {
-
-                    var obj = JSON.parse(body);
-                    console.log(obj);
-                    var data = subscribeToGlipEvents(obj.access_token)
-                    req.session.cookie.access_token = obj.access_token;
-                    console.log(req.session.cookie.access_token);
-                    res.json(data);
-                }
+        platform.login({
+            code : req.query.code,
+            redirectUri : REDIRECT_HOST + '/oauth'
+        }).then(function(authResponse){
+            var obj = authResponse.json();
+            bot_token = obj.access_token;
+            res.send(obj)
+            subscribeToGlipEvents();
+        }).catch(function(e){
+            console.error(e)
+            res.send("Error: " + e);
         })
     }
 });
@@ -98,8 +75,12 @@ app.post('/callback', function (req, res) {
         }).on('end', function() {
             body = Buffer.concat(body).toString();
             console.log('WEBHOOK EVENT BODY: ', body);
+            var obj = JSON.parse(body);
             res.statusCode = 200;
             res.end(body);
+            if(obj.event == "/restapi/v1.0/subscription/~?threshold=60&interval=15"){
+                renewSubscription(obj.subscriptionId);
+            }
         });
     }
 });
@@ -110,30 +91,35 @@ function subscribeToGlipEvents(token){
     var requestData = {
         "eventFilters": [
             "/restapi/v1.0/glip/posts",
-            "/restapi/v1.0/glip/groups"
+            "/restapi/v1.0/glip/groups",
+            "/restapi/v1.0/subscription/~?threshold=60&interval=15"
         ],
         "deliveryMode": {
             "transportType": "WebHook",
             "address": REDIRECT_HOST + "/callback"
-        }
+        },
+        "expiresIn": 604799
     };
-    request(
-        {
-            method: 'POST',
-            url: RINGCENTRAL_ENV + '/restapi/v1.0/subscription',
-            headers:
-                {
-                    'cache-control': 'no-cache',
-                    'content-type': 'application/json',
-                    accept: 'application/json',
-                    authorization: 'Bearer '.concat(token)
-                },
-            json: requestData
-        }, function(error, response, body){
-            if(error){
-                console.log(error);
-            } else {
-                console.log(body);
-            }
-        })
+    platform.post('/subscription', requestData)
+        .then(function (subscriptionResponse) {
+            console.log('Subscription Response: ', subscriptionResponse.json());
+            subscription = subscriptionResponse;
+            subscriptionId = subscriptionResponse.id;
+        }).catch(function (e) {
+            console.error(e);
+            throw e;
+    });
+}
+
+function renewSubscription(id){
+    console.log("Renewing Subscription");
+    platform.post('/subscription/' + id + "/renew")
+        .then(function(response){
+            var data = JSON.parse(response.text());
+            subscriptionId = data.id
+            console.log("Subscription Renewal Successfull. Next Renewal scheduled for:" + data.expirationTime);
+        }).catch(function(e) {
+            console.error(e);
+            throw e;
+        });
 }

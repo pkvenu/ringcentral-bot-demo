@@ -79,36 +79,17 @@ app.get('/oauth', function (req, res) {
         res.send({"Error": "Looks like we're not getting code."});
         console.log("Looks like we're not getting code.");
     }else {
-        request(
-            {
-                method: 'POST',
-                url: RINGCENTRAL_ENV + '/restapi/oauth/token',
-                headers:
-                    {
-                        'cache-control': 'no-cache',
-                        'content-type': 'application/x-www-form-urlencoded',
-                        accept: 'application/json',
-                        authorization: 'Basic '.concat(apiKey)
-                    },
-                form:
-                    {
-                        code: req.query.code,
-                        extension_id: req.query.extension_id,
-                        grant_type: 'authorization_code',
-                        redirect_uri: REDIRECT_HOST + '/oauth'
-                    }
-            }, function(error, response, body){
-                if(error){
-                    console.log(error);
-                } else {
-
-                    var obj = JSON.parse(body);
-                    console.log(obj);
-                    var data = subscribeToGlipEvents(obj.access_token)
-                    req.session.cookie.access_token = obj.access_token;
-                    console.log(req.session.cookie.access_token);
-                    res.json(data);
-                }
+        platform.login({
+            code : req.query.code,
+            redirectUri : REDIRECT_HOST + '/oauth'
+        }).then(function(authResponse){
+            var obj = authResponse.json();
+            bot_token = obj.access_token;
+            res.send(obj)
+            subscribeToGlipEvents();
+        }).catch(function(e){
+            console.error(e)
+            res.send("Error: " + e);
         })
     }
 });
