@@ -51,33 +51,25 @@ app.post('/oauth', function (req, res) {
     if (req.body.access_token) {
         bot_token = req.body.access_token;
 	console.log("Verifying redirect URL for bot server.")
-        res.status(200);
-        res.send("")
 
-	// This is a bit of a hack. We are bypassing the login() method
-	// of the SDK in favor of setting the access key directly.
-	// The hack here is to set the refresh token to effectively a null
-	// value since it is not transmitted to us.
-	// There is probably a more elegant solution for this
+	// Normally, the access token in the SDK is set by the login()
+	// method. Here, we bypass the login method to set the access
+	// token directly. 
 	var data = platform.auth().data();
 	data.token_type = "bearer"
 	data.expires_in = 1000000
 	data.access_token = bot_token
-	//data.refresh_token = 'xxx'
-	//data.refresh_token_expires_in = 1000000
-	console.log("Setting auth context to: ", data)
 	platform.auth().setData(data)    
 	
 	// Subscribe to webhooks relating to team messaging posts. This
 	// will alert your bot when a message has been posted so the bot
 	// can parse the message and respond to it. 
-        subscribeToEvents( bot_token );
 	// You may wish to store the bot token if you intend to re-use it
 	// for other calls to the RingCentral API
-	// TODO - store bot_token to make responding to future posts easier
-    } else {
-        res.send("")
+        subscribeToEvents( bot_token );
     }
+    res.status(200);
+    res.send("")
 });
 
 // Callback method received after subscribing to webhook
