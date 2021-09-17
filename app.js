@@ -1,3 +1,11 @@
+/*
+This is a sample bot application for RingCentral. Learn more about this 
+app by following the instructions found at the URL below:
+https://developers.ringcentral.com/guide/team-messaging/bots/walkthrough/
+
+Copyright: 2021 - RingCentral, Inc.
+License: MIT
+*/
 require('dotenv').config();
 
 const RC    = require('ringcentral');
@@ -26,13 +34,12 @@ app.listen(PORT, function () {
 });
 
 // This route handles GET requests to our root ngrok address and responds
-// with the same "Ngrok is working message" we used before
+// with the same "Ngrok is working message"
 app.get('/', function(req, res) {
     res.send('Ngrok is working! Path Hit: ' + req.url);
 });
 
-// instantiate the RingCentral Javascript SDK
-// Be default, this will communicate with the RingCentral developer sandbox
+// Instantiate the RingCentral Javascript SDK
 rcsdk = new RC({
     server:    RINGCENTRAL_ENV,
     appKey:    CLIENT_ID,
@@ -41,15 +48,53 @@ rcsdk = new RC({
 
 platform = rcsdk.platform();
 
-// Handle authorization callbacks
-// When a bot is added to an organization, a.k.a. when it is installed,
-// RingCentral will authorize the bot. For private apps, RingCentral will
-// transmit the access key directly. This key can be used for making other
-// API calls to RingCentral, including calling the subscription API for
-// subscribing to webhooks
+// Handle authorization for public bots
+//
+// When a public bot is installed, RingCentral transmits an auth token
+// via an HTTP GET. Here the bot receives the token and then uses that
+// token to login() to RingCentral to exchange the token for an access key.
+// Then the bot subscribes to webhooks so that it can respond to message
+// events.
+//
+// This server stores that key in memory. As a result, if the server is
+// restarted, you will need to remove and reinstall the not in order to obtain
+// a fresh API token. In a more advanced implementation, the acess key would
+// be persisted so that it can easily be re-used if the server is restarted. 
+app.get('/oauth', function (req, res) {
+    console.log("Public bot being installed");
+    if (!req.query.code){
+        res.status(500).send({"Error": "No authorization token received."}).end();
+        console.log("RingCentral did not transmit an authorizaton token.");
+    } else {
+        var creatorId = req.query.creator_extension_id;
+        platform.login({
+            code : req.query.code,
+            redirectUri : REDIRECT_HOST + '/oauth'
+        }).then(function(authResponse){
+	    subscribeToEvents();
+        }).catch( function(e){
+            console.error(e)
+	    res.status(500).send("Error installing bot and subscribing to events: ", e).end()
+        })
+    }
+    res.status(200).send("").end();
+});
+
+// Handle authorization for public bots
+//
+// When a private bot is installed, RingCentral transmits a permanent access key
+// to the bot via an HTTP POST. 
+//
+// Then the bot subscribes to webhooks so that it can respond to message
+// events.
+//
+// This server stores that key in memory. As a result, if the server is
+// restarted, you will need to remove and reinstall the not in order to obtain
+// a fresh API token. In a more advanced implementation, the acess key would
+// be persisted so that it can easily be re-used if the server is restarted. 
 app.post('/oauth', function (req, res) {
+    res.status(200);
     if (req.body.access_token) {
-        bot_token = req.body.access_token;
 	console.log("Verifying redirect URL for bot server.")
 
 	// Normally, the access token in the SDK is set by the login()
@@ -58,18 +103,16 @@ app.post('/oauth', function (req, res) {
 	var data = platform.auth().data();
 	data.token_type = "bearer"
 	data.expires_in = 1000000
-	data.access_token = bot_token
+	data.access_token = req.body.access_token;
 	platform.auth().setData(data)    
 	
-	// Subscribe to webhooks relating to team messaging posts. This
-	// will alert your bot when a message has been posted so the bot
-	// can parse the message and respond to it. 
-	// You may wish to store the bot token if you intend to re-use it
-	// for other calls to the RingCentral API
-        subscribeToEvents( bot_token );
+	try {
+            subscribeToEvents();
+	} catch(e) {
+	    res.status(500).send("Error: ", e).end();
+	}
     }
-    res.status(200);
-    res.send("")
+    res.send("").end()
 });
 
 // Callback method received after subscribing to webhook
@@ -85,14 +128,49 @@ app.post('/callback', function (req, res) {
         res.end();
     } else {
 	console.log("Webhook received: ", req.body);
-	res.statusCode = 200;
-        res.end('');
         if (req.body.event == "/restapi/v1.0/subscription/~?threshold=60&interval=15") {
 	    console.log("Renewing subscription ID: " + req.body.subscriptionId);
             renewSubscription(req.body.subscriptionId);
-        }
+        } else if (req.body.body.eventType == "PostAdded") {
+	    console.log("Received message: " + req.body.body.text);
+	    if (req.body.ownerId == req.body.body.creatorId) {
+		console.log("Ignoring message posted by bot.");
+	    } else if (req.body.body.text == "ping") {
+		send_message( "pong", req.body.body.groupId )
+	    } else if (req.body.body.text == "hello") {
+		send_card( HELLO_CARD, req.body.body.groupId )
+	    } else {
+		send_message( "I do not understand '" +
+			      req.body.body.text +
+			      "'", req.body.body.groupId )
+	    }
+	}
+	res.statusCode = 200;
+        res.end('');
     }
 });
+
+app.post('/msg-callback', function (req, res) {
+    console.log( "Receiving webhook about message interaction." )
+    res.statusCode = 200;
+    res.end('');
+});
+
+function send_message( msg, group ) {
+    console.log("Posting response to group: " + group);
+    platform.post('/restapi/v1.0/glip/chats/'+group+'/posts', {
+	"text": msg
+    }).catch( function (e) {
+	console.log(e)
+    });
+}
+
+function send_card( card, group ) {
+    console.log("Posting response to group: " + group);
+    platform.post('/restapi/v1.0/glip/chats/'+group+'/adaptive-cards', card).catch( function (e) {
+	console.log(e)
+    });
+}
 
 // Method to Subscribe to Glip Events.
 function subscribeToEvents(token){
@@ -126,9 +204,39 @@ function renewSubscription(id){
         .then(function(response){
             var data = JSON.parse(response.text());
             subscriptionId = data.id
-            console.log("Subscription Renewal Successfull. Next Renewal scheduled for:" + data.expirationTime);
+            console.log("Subscription renewed. Next renewal:" + data.expirationTime);
         }).catch(function(e) {
-            console.error(e);
+	    console.log("Error subscribing to bot events: ", e);
             throw e;
         });
+}
+
+var HELLO_CARD = {
+    "type": "AdaptiveCard",
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.3",
+    "body": [
+        {
+            "type": "TextBlock",
+            "size": "Medium",
+            "weight": "Bolder",
+            "text": "Hello World"
+        },
+        {
+            "type": "TextBlock",
+            "text": "Enter your name in the field below so that I can say hello.",
+            "wrap": true
+        },
+        {
+            "type": "Input.Text",
+	    "id":"hello-text",
+            "placeholder": "Enter your name"
+        }
+    ],
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Say Hello"
+         }
+    ]
 }
