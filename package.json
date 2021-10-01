@@ -1,6 +1,6 @@
 {
-  "name": "developing-locally-with-glip",
-  "version": "0.0.1",
+  "name": "ringcentral-demo-bot",
+  "version": "0.1.0",
   "description": "A sample app to develop locally with glip using ngrok",
   "main": "app.js",
   "scripts": {
@@ -14,7 +14,10 @@
     "url": "https://github.com/pkvenu/developing-locally-with-Glip/issues"
   },
   "keywords": [
-    "glip",
+    "ringcentral",
+    "conversational ui",
+    "team chat",
+    "team messaging",
     "onboarding",
     "chatbot",
     "bot"
