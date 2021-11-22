@@ -25,8 +25,6 @@ const TOKEN_TEMP_FILE = '.bot-auth';
 var app = express();
 var platform, subscription, rcsdk, subscriptionId, bot_token;
 
-var CARD_ID_CACHE = {};
-
 app.use( bp.json() );
 app.use( bp.urlencoded({
   extended: true
@@ -172,11 +170,7 @@ function send_message( msg, group ) {
 function send_card( card, group ) {
     console.log("Posting card to group: " + group);
     platform.post('/restapi/v1.0/glip/chats/'+group+'/adaptive-cards', card)
-        .then( function (resp) {
-	    var jsonObj = resp.json()
-	    var key = jsonObj.creator.id + '-' + group
-	    CARD_ID_CACHE[ key ] = jsonObj.id
-	}).catch( function (e) {
+	.catch( function (e) {
 	    console.log(e)
 	});
 }
@@ -185,25 +179,17 @@ function send_card( card, group ) {
 app.post('/msg-callback', function (req, res) {
     console.log( "Receiving webhook about message interaction." )
     update_card( req.body.conversation.id,
-		 req.body.post,
+		 req.body.card.id,
 		 hello_name_card( req.body.data.hellotext ) )
     res.statusCode = 200;
     res.end('');
 });
 
-function update_card( group, post, card ) {
+function update_card( group, card, content ) {
     console.log("Updating card...");
-    platform.get('/restapi/v1.0/glip/chats/'+group+'/posts/'+post.id)
-        .then( function (resp) {
-	    var jsonObj = resp.json();
-	    key = jsonObj.creatorId + '-' + group
-	    cardId = CARD_ID_CACHE[ key ]
-	    platform.put('/restapi/v1.0/glip/adaptive-cards/'+cardId, card)
-		.catch( function (e) {
-		    console.log(e)
-		})
-	}).catch( function (e) {
-	    console.log( e )
+    platform.put('/restapi/v1.0/glip/adaptive-cards/'+card, content)
+	.catch( function (e) {
+	    console.log(e)
 	});
 
 }
