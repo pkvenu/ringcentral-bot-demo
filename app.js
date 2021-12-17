@@ -8,7 +8,7 @@ License: MIT
 */
 require('dotenv').config();
 
-const RC    = require('ringcentral');
+const RC    = require('@ringcentral/sdk').SDK
 var express = require('express');
 var request = require('request');
 var bp      = require('body-parser')
